@@ -1,0 +1,253 @@
+package universal;//import FunRand;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Element {
+    public enum RoutingType {
+        PROBABILITY,
+        PRIORITY
+    }
+
+    private String name;
+    private double tnext;
+    private double delayMean, delayDev;
+    private String distribution;
+    private int quantity;
+    private double tcurr;
+    private int state;
+    protected List<Element> nextElements = new ArrayList<>();
+    private List<Double> transitionProbabilities = new ArrayList<>();
+    private RoutingType routingType = RoutingType.PROBABILITY;
+    private static int nextId=0;
+    private int id;
+    protected int numDevices;
+    protected int busyDevices;
+    private double busyTime;
+
+    public Element(){
+        numDevices = 1;
+        busyDevices = 0;
+        busyTime = 0.0;
+        tnext = Double.MAX_VALUE;
+        delayMean = 1.0;
+        distribution = "exp";
+        tcurr = tnext;
+        state=0;
+        id = nextId;
+        nextId++;
+        name = "element"+id;
+    }
+    public Element(double delay){
+        name = "anonymus";
+        tnext = Double.MAX_VALUE;
+        delayMean = delay;
+        distribution = "";
+        tcurr = tnext;
+        state=0;
+        id = nextId;
+        nextId++;
+        name = "element"+id;
+        numDevices = 1;
+        busyDevices =0;
+        busyTime = 0.0;
+    }
+
+    public Element(double delay, int devices){
+        name = "anonymus";
+        tnext = Double.MAX_VALUE;
+        delayMean = delay;
+        distribution = "";
+        tcurr = tnext;
+        state=0;
+        id = nextId;
+        nextId++;
+        name = "element"+id;
+        numDevices = devices;
+        busyDevices = 0;
+        busyTime = 0.0;
+    }
+
+    public Element(String nameOfElement, double delay){
+        name = nameOfElement;
+        tnext = Double.MAX_VALUE;
+        delayMean = delay;
+        distribution = "exp";
+        tcurr = tnext;
+        state=0;
+        id = nextId;
+        nextId++;
+        name = "element"+id;
+        busyDevices =0;
+        busyTime = 0.0;
+    }
+
+    public double getDelay() {
+        double delay = getDelayMean();
+        if ("exp".equalsIgnoreCase(getDistribution())) {
+            delay = FunRand.Exp(getDelayMean());
+        } else {
+            if ("norm".equalsIgnoreCase(getDistribution())) {
+                delay = FunRand.Norm(getDelayMean(),
+                        getDelayDev());
+            } else {
+                if ("unif".equalsIgnoreCase(getDistribution())) {
+                    delay = FunRand.Unif(getDelayMean(),
+                            getDelayDev());
+                } else {
+                    if("".equalsIgnoreCase(getDistribution()))
+                        delay = getDelayMean();
+                }
+            }
+        }
+        return delay;
+    }
+    public double getDelayDev() {
+        return delayDev;
+    }
+    public void setDelayDev(double delayDev) {
+        this.delayDev = delayDev;
+    }
+    public String getDistribution() {
+        return distribution;
+    }
+    public void setDistribution(String distribution) {
+        this.distribution = distribution;
+    }
+    public int getQuantity() {
+        return quantity;
+    }
+    public double getTcurr() {
+        return tcurr;
+    }
+    public void setTcurr(double tcurr) {
+        this.tcurr = tcurr;
+    }
+    public int getState() {
+        return state;
+    }
+    public void setState(int state) {
+        this.state = state;
+    }
+    public void inAct() {
+
+    }
+    public void outAct(){
+        quantity++;
+    }
+
+    public void addNextElement(Element element, double probability) {
+        this.nextElements.add(element);
+        this.transitionProbabilities.add(probability);
+        this.routingType = RoutingType.PROBABILITY;
+    }
+
+    // Варіант 2: Для вибору за пріоритетом (без ймовірності)
+    public void addNextElement(Element element) {
+        this.nextElements.add(element);
+        // Додаємо 0.0 як заглушку, щоб розміри списків збігалися
+        this.transitionProbabilities.add(0.0);
+        this.routingType = RoutingType.PRIORITY;
+    }
+
+    protected Element selectNextElement() {
+        if (nextElements.isEmpty()) return null;
+
+        if (this.routingType == RoutingType.PRIORITY) {
+            Element bestChoice = nextElements.getFirst();
+            int minQueue = Integer.MAX_VALUE;
+
+            for (Element e : nextElements) {
+                if (e instanceof Process p) {
+                    if (p.getBusyDevices() < p.getNumDevices()) {
+                        return p;
+                    }
+                    // якщо всі пристрої зайняті, то підемо в той, де черга найменша, щоб зменшити ризик відмов
+                    if (p.getQueue() < minQueue) {
+                        minQueue = p.getQueue();
+                        bestChoice = p;
+                    }
+                }
+            }
+            return bestChoice;
+        }
+
+        if (this.routingType == RoutingType.PROBABILITY) {
+            double random = Math.random();
+            double cumulativeProbability = 0.0;
+            for (int i = 0; i < nextElements.size(); i++) {
+                cumulativeProbability += transitionProbabilities.get(i);
+                if (random <= cumulativeProbability) {
+                    return nextElements.get(i);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public double getTnext() {
+        return tnext;
+    }
+    public void setTnext(double tnext) {
+        this.tnext = tnext;
+    }
+    public double getDelayMean() {
+        return delayMean;
+    }
+    public void setDelayMean(double delayMean) {
+        this.delayMean = delayMean;
+    }
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void printResult(){
+        System.out.println(getName()+ " quantity = "+ quantity);
+    }
+
+    public void printInfo(){
+        System.out.println(getName()+ " state= " +state+
+                " quantity = "+ quantity+
+                " tnext= "+tnext);
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public void doStatistics(double delta){
+        /*
+        if (state == 1) {
+            busyTime += delta; // Оновлення часу завантаження
+        }
+
+         */
+    }
+    public int getBusyDevices() {
+        return busyDevices;
+    }
+    public void setBusyDevices(int busyDevices) {
+        this.busyDevices = busyDevices;
+    }
+
+    public void updateBusyTime() {
+        busyTime += (tcurr - tnext);
+    }
+
+    public double getBusyTime() {
+        return busyTime;
+    }
+
+    public void setBusyTime(double time) {
+        busyTime = time;
+    }
+
+    public double getMeanLoad(double totalTime) {
+        return busyTime / totalTime;
+    }
+}
