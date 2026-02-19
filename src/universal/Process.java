@@ -1,8 +1,5 @@
 package universal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Process extends Element {
     private int queue, maxqueue, failure;
     private double meanLoad;

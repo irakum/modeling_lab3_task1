@@ -8,7 +8,7 @@ public class Main {
         creator.setName("CREATOR");
         creator.setDistribution("exp");
 
-        Process process1 = new Process(2, 2);
+        Process process1 = new Process(1, 1);
         process1.setName("PROCESSOR1");
         process1.setDistribution("exp");
         process1.setMaxqueue(5);
@@ -45,6 +45,6 @@ public class Main {
         list.add(dispose);
 
         Model model = new Model(list);
-        model.simulate(10.0);
+        model.simulate(1000.0);
     }
 }

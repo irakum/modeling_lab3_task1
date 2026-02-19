@@ -142,11 +142,9 @@ public class Element {
         this.routingType = RoutingType.PROBABILITY;
     }
 
-    // Варіант 2: Для вибору за пріоритетом (без ймовірності)
     public void addNextElement(Element element) {
         this.nextElements.add(element);
-        // Додаємо 0.0 як заглушку, щоб розміри списків збігалися
-        this.transitionProbabilities.add(0.0);
+        this.transitionProbabilities.add(1.0);
         this.routingType = RoutingType.PRIORITY;
     }
 
