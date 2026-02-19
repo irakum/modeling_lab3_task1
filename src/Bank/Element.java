@@ -40,18 +40,6 @@ public class Element {
         busyTime = 0.0;
     }
 
-    public Element(double delay, int devices){
-        tnext = Double.MAX_VALUE;
-        delayMean = delay;
-        distribution = "";
-        tcurr = tnext;
-        state=0;
-        id = nextId;
-        nextId++;
-        name = "element"+id;
-        busyTime = 0.0;
-    }
-
     public Element(String nameOfElement, double delay){
         name = nameOfElement;
         tnext = Double.MAX_VALUE;

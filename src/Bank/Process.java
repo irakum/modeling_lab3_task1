@@ -7,7 +7,6 @@ public class Process extends Element {
     private int switchCount = 0; // пункт 7
     private double lastDepartureTime = 0; // пункт 3
     private double sumIntervals = 0; //пункт 3 (сума для середнього)
-    private int departedCount = 0; // пункт 3 (кількість виїздів)/ пункт 4 (сумарний час)
 
     public Process(double delay) {
         super(delay);
@@ -33,15 +32,13 @@ public class Process extends Element {
 
     @Override
     public void outAct() {
-        // --- ПУНКТ 3: Розрахунок інтервалів між від'їздами ---
-        if (departedCount > 0) {
+        super.outAct();
+        super.setState(0);
+
+        if (super.getQuantity() > 0) {
             sumIntervals += (super.getTcurr() - lastDepartureTime);
         }
         lastDepartureTime = super.getTcurr();
-        departedCount++;
-
-        super.outAct();
-        super.setState(0);
 
         if (queue > 0) {
             queue--;
@@ -82,15 +79,11 @@ public class Process extends Element {
 
     // Геттери для результатів
     public double getAverageInterval() {
-        return departedCount > 1 ? sumIntervals / (departedCount - 1) : 0;
+        return super.getQuantity() > 1 ? sumIntervals / (super.getQuantity() - 1) : 0;
     }
 
     public int getSwitchCount() {
         return switchCount;
-    }
-
-    public int getDepartedCount() {
-        return departedCount;
     }
 
     public int getFailure() {
