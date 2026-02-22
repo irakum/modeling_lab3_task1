@@ -50,7 +50,7 @@ public class Model {
                     e.outAct();
                 }
             }
-            //printInfo();
+            printInfo();
         }
         printResult();
     }

@@ -45,6 +45,8 @@ public class Process extends Element {
 
     @Override
     public void outAct() {
+        super.outAct();
+
         int deviceIndex = -1;
         for (int i = 0; i < numDevices; i++) {
             if (tNextDevices.get(i) == super.getTcurr()) {
@@ -59,32 +61,73 @@ public class Process extends Element {
         tNextDevices.set(deviceIndex, Double.MAX_VALUE);
         patientsInService.set(deviceIndex, null);
 
-        processNextStep(finishedPatient);
-
-        if (!queue.isEmpty()) {
-            Patient nextPatient = null;
-
-            if (this.getName().equals("RECEPTION")){
-                for (Patient candidate : queue) {
-                    if (candidate.getType() == 1) {
-                        nextPatient = candidate;
-                        break; // Знайшли найпріоритетнішого
-                    }
-                }
-            }
-
-            if (nextPatient == null) {
-                nextPatient = queue.getFirst();
-            }
-
-            queue.remove(nextPatient);
-
-            double delay = getDelayForPatient(nextPatient);
-            tNextDevices.set(deviceIndex, super.getTcurr() + delay);
-            patientsInService.set(deviceIndex, nextPatient);
-        }
+        handlePatientTransition(finishedPatient);
+        checkQueue(deviceIndex);
 
         updateTNext();
+    }
+
+    private void handlePatientTransition(Patient p) {
+        String name = this.getName().toUpperCase();
+
+        switch (name) {
+            case "RECEPTION" -> {
+                if (p.getType() == 1) {
+                    sendTo("ROOM", p);
+                } else {
+                    sendTo("WAY_TO_LAB", p);
+                }
+            }
+            case "LAB_REGISTRATION" -> sendTo("LAB_ANALYSIS", p);
+            case "LAB_ANALYSIS" -> {
+                if (p.getType() == 2) {
+                    p.setType(1);
+                    sendTo("WAY_BACK", p);
+                } else {
+                    sendTo("DISPOSE", p);
+                }
+            }
+            case "ROOM" -> ((Dispose) nextElements.getFirst()).inAct(p);
+
+            default -> {
+                // Якщо це просто шлях (WAY-), передаємо першому наступному елементу
+                if (!nextElements.isEmpty()) {
+                    ((Process) nextElements.getFirst()).inAct(p);
+                }
+            }
+        }
+    }
+
+    private void sendTo(String nextName, Patient p) {
+        Element next = findNextByName(nextName);
+        if (next != null) {
+            ((Process) next).inAct(p);
+        }
+    }
+
+    private void checkQueue(int deviceIndex) {
+        if (queue.isEmpty()) return;
+
+        Patient nextPatient = null;
+
+        if (this.getName().equalsIgnoreCase("RECEPTION")) {
+            for (Patient candidate : queue) {
+                if (candidate.getType() == 1) {
+                    nextPatient = candidate;
+                    break;
+                }
+            }
+        }
+
+        if (nextPatient == null) {
+            nextPatient = queue.getFirst();
+        }
+
+        queue.remove(nextPatient);
+
+        double delay = getDelayForPatient(nextPatient);
+        tNextDevices.set(deviceIndex, super.getTcurr() + delay);
+        patientsInService.set(deviceIndex, nextPatient);
     }
 
     private double getDelayForPatient(Patient p) {
