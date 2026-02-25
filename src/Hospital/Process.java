@@ -7,6 +7,10 @@ public class Process extends Element {
     private ArrayList<Double> tNextDevices = new ArrayList<>();
     private ArrayList<Patient> patientsInService = new ArrayList<>();
 
+    private double lastArrivalTime = 0;
+    private double totalIntervals = 0;
+    private int arrivalCount = 0;
+
     public Process(double delay, int numDevices) {
         super(delay, numDevices);
         for (int i = 0; i < numDevices; i++) {
@@ -24,6 +28,14 @@ public class Process extends Element {
     }
 
     public void inAct(Patient p) {
+        if (this.getName().equalsIgnoreCase("LAB_REGISTRATION")) {
+            if (arrivalCount > 0) {
+                totalIntervals += (super.getTcurr() - lastArrivalTime);
+            }
+            lastArrivalTime = super.getTcurr();
+            arrivalCount++;
+        }
+
         int freeDeviceIndex = -1;
         for (int i = 0; i < numDevices; i++) {
             if (tNextDevices.get(i) == Double.MAX_VALUE) {
@@ -84,17 +96,12 @@ public class Process extends Element {
                     p.setType(1);
                     sendTo("WAY_BACK", p);
                 } else {
-                    sendTo("DISPOSE", p);
+                    ((Dispose) findNextByName("DISPOSE")).inAct(p);
                 }
             }
-            case "ROOM" -> ((Dispose) nextElements.getFirst()).inAct(p);
-
-            default -> {
-                // Якщо це просто шлях (WAY-), передаємо першому наступному елементу
-                if (!nextElements.isEmpty()) {
-                    ((Process) nextElements.getFirst()).inAct(p);
-                }
-            }
+            case "ROOM" -> ((Dispose) findNextByName("DISPOSE")).inAct(p);
+            case "WAY_BACK" -> sendTo("RECEPTION", p);
+            case "WAY_TO_LAB" -> sendTo("LAB_REGISTRATION", p);
         }
     }
 
@@ -142,62 +149,8 @@ public class Process extends Element {
         return super.getDelay();
     }
 
-    private void processNextStep(Patient p) {
-        String name = this.getName().toUpperCase();
-
-        if (name.equals("RECEPTION")) {
-            if (p.getType() == 1) {
-                Element room = findNextByName("ROOM");
-                if (room != null) {
-                    ((Process) room).inAct(p);
-                }
-            } else {
-                Element toLabWay = findNextByName("WAY_TO_LAB");
-                if (toLabWay != null) {
-                    ((Process) toLabWay).inAct(p);
-                }
-            }
-        }
-
-        else if (name.equals("LAB_REGISTRATION")) {
-            System.out.println(super.getTcurr() + ": Patient" + p.getId() + " пройшов реєстрацію в лабі та очікує лаборанта.");
-            Element labAnalysis = findNextByName("LAB_ANALYSIS");
-            if (labAnalysis != null) {
-                ((Process) labAnalysis).inAct(p);
-            }
-        }
-
-        else if (name.equals("LAB_ANALYSIS")) {
-            if (p.getType() == 2) {
-                p.setType(1);
-                System.out.println("Patient" + p.getId() + " здав аналізи і повертається в чергу до лікарів як тип 1");
-
-                Element backWay = findNextByName("WAY_BACK");
-                if (backWay != null) {
-                    ((Process) backWay).inAct(p);
-                }
-            } else {
-                System.out.println("Patient" + p.getId() + " залишає лікарню після обстеження.");
-                Element dispose = findNextByName("DISPOSE");
-                if (dispose != null) {
-                    dispose.inAct();
-                }
-            }
-        }
-
-        else if (name.equals("ROOM")) {
-            System.out.println("Patient" + p.getId() + " доставлений у палату.");
-            Element dispose = findNextByName("DISPOSE");
-            if (dispose != null) {
-                dispose.inAct();
-            }
-        }
-
-        else if (name.startsWith("WAY")) {
-            if (!nextElements.isEmpty()) {
-                ((Process)nextElements.getFirst()).inAct(p);
-            }
-        }
+    public double getAverageInterval() {
+        return arrivalCount > 1 ? totalIntervals / (arrivalCount - 1) : 0;
     }
 
     private Element findNextByName(String name) {

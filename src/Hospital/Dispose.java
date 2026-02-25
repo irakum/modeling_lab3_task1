@@ -11,10 +11,6 @@ public class Dispose extends Element {
     }
 
     public void inAct(Patient p) {
-        if (super.getState() == 1) {
-            this.updateBusyTime();
-        }
-
         double timeSpent = getTcurr() - p.getTArrival();
 
         totalTimeInSystem += timeSpent;
@@ -31,6 +27,10 @@ public class Dispose extends Element {
     @Override
     public void outAct() {
 
+    }
+
+    public double getAvgTime(int type) {
+        return countByType[type] > 0 ? timeByType[type] / countByType[type] : 0;
     }
 
     @Override

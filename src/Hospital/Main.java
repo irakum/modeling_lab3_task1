@@ -56,6 +56,6 @@ public class Main {
         list.add(dispose);
 
         Model model = new Model(list);
-        model.simulate(100.0);
+        model.simulate(1000.0);
     }
 }

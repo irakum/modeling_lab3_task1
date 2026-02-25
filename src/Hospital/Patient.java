@@ -3,7 +3,7 @@ package Hospital;
 public class Patient {
     private int type;
     private double tArrival;
-    private int id; // Для зручності відстеження в логах
+    private int id;
     private static int nextId = 1;
 
     public Patient(int type, double tArrival) {

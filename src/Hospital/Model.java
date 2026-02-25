@@ -61,19 +61,34 @@ public class Model {
         }
     }
     public void printResult() {
-        System.out.println("\n-------------RESULTS-------------");
-        /*
+        System.out.println("\n------------- FINAL RESULTS -------------");
+
+        Dispose finalDispose = null;
+        Process labReg = null;
+
         for (Element e : list) {
-            e.printResult();
-            if (e instanceof Process) {
-                Process p = (Process) e;
-                System.out.println("mean length of queue = " +
-                        p.getMeanQueue() / tcurr
-                        + "\nfailure probability = " +
-                        Math.round((p.getFailure() / (double)
-                                (p.getQuantity()+p.getFailure())) * 100 * 10000) / (double)10000 + "%;"
-                       + "\nсереднє завантаження процесора: " + p.getBusyTime() / tcurr + ";\n");
+            e.printResult(); // Стандартний вивід (черги, завантаження)
+
+            if (e instanceof Dispose) {
+                finalDispose = (Dispose) e;
             }
-        }*/
+            if (e.getName().equalsIgnoreCase("LAB_REGISTRATION")) {
+                labReg = (Process) e;
+            }
+        }
+
+        System.out.println("\n--- Аналіз часу в системі ---");
+        if (finalDispose != null) {
+            for (int i = 1; i <= 3; i++) {
+                System.out.printf("Середній час у системі для типу %d: %.2f\n",
+                        i, finalDispose.getAvgTime(i));
+            }
+        }
+
+        System.out.println("\n--- Аналіз лабораторії ---");
+        if (labReg != null) {
+            System.out.printf("Середній інтервал прибуття в лабораторію: %.2f\n",
+                    labReg.getAverageInterval());
+        }
     }
 }
