@@ -77,7 +77,6 @@ public class Process extends Element {
         }
     }
 
-    // Геттери для результатів
     public double getAverageInterval() {
         return super.getQuantity() > 1 ? sumIntervals / (super.getQuantity() - 1) : 0;
     }

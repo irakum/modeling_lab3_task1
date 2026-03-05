@@ -12,7 +12,7 @@ public class Main {
         reception.setName("RECEPTION");
         reception.setDistribution("exp");
 
-        Process room = new Process(3,8, 3);
+        Process room = new Process(20,25, 3);
         room.setName("ROOM");
         room.setDistribution("unif");
 
@@ -56,6 +56,9 @@ public class Main {
         list.add(dispose);
 
         Model model = new Model(list);
-        model.simulate(1000.0);
+        model.simulate(3000.0);
+
+       // System.out.println(wayToLab.getName() + ": поточна кількість активних каналів = " + wayToLab.getNumDevices());
+       // System.out.println(wayBack.getName() + ": поточна кількість активних каналів = " + wayBack.getNumDevices());
     }
 }

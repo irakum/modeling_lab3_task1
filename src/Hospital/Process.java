@@ -43,7 +43,17 @@ public class Process extends Element {
                 break;
             }
         }
+
+        // 2. Якщо вільного каналу немає, але це ШЛЯХ — створюємо новий канал
+        if (freeDeviceIndex == -1 && this.getName().toUpperCase().startsWith("WAY")) {
+            numDevices++;
+            tNextDevices.add(Double.MAX_VALUE);
+            patientsInService.add(null);
+            freeDeviceIndex = tNextDevices.size() - 1;
+        }
+
         if (freeDeviceIndex != -1) {
+            setState(getState()+1);
             double delay = getDelayForPatient(p);
             tNextDevices.set(freeDeviceIndex, super.getTcurr() + delay);
             patientsInService.set(freeDeviceIndex, p);
@@ -58,6 +68,7 @@ public class Process extends Element {
     @Override
     public void outAct() {
         super.outAct();
+        setState(getState()-1);
 
         int deviceIndex = -1;
         for (int i = 0; i < numDevices; i++) {
@@ -131,6 +142,7 @@ public class Process extends Element {
         }
 
         queue.remove(nextPatient);
+        setState(getState()+1);
 
         double delay = getDelayForPatient(nextPatient);
         tNextDevices.set(deviceIndex, super.getTcurr() + delay);

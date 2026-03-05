@@ -16,7 +16,7 @@ public class Main {
         Process process2 = new Process(0.3);
         process2.setName("Cashier2");
         process2.setDistribution("exp");
-        process2.setMaxqueue(3);
+        process2.setMaxqueue(5);
 
         Dispose dispose = new Dispose();
         dispose.setName("DISPOSE");
